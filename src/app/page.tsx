@@ -316,7 +316,7 @@ export default function Home() {
             // ทุก 10 บาทได้ 1 แต้ม โดย floor ตัดเศษที่ไม่ครบสิบบาทออกตามกติกา
             const earnedPoints = Math.floor(amount / 10);
             setUser((u) => u && { ...u, balance: u.balance + amount, points: u.points + earnedPoints });
-            setNotifications((all) => [{ id: String(Date.now()), title: `เติมเงินสำเร็จ +${amount} บาท`, detail: `Wallet เพิ่ม ฿${amount} และได้รับ ${earnedPoints} แต้ม`, createdAt: "เมื่อสักครู่", read: false }, ...all]);
+            setNotifications((all) => [{ id: String(Date.now()), title: `เติมเงินสำเร็จ +${amount} บาท`, detail: `Wallet เพิ่ม ฿${amount} และได้รับ ${earnedPoints} แต้ม`, createdAt: "เมื่อสักครู่", read: false, tone: "success" }, ...all]);
           }}
           onClearHistory={() => setHistory([])}
           onUpdateName={(displayName) => setUser((current) => current && { ...current, displayName })}
