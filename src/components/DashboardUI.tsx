@@ -232,7 +232,8 @@ export function Sidebar({
               >
                 <div className="flex justify-between gap-2">
                   <span className="flex items-center gap-2 text-sm font-bold">
-                    <WashingMachine size={15} /> {machine.id}
+                    {/* ใช้ไอคอนตามชนิดเครื่อง เพื่อให้รายการเครื่องที่ใช้งานดูแยกซัก/อบได้ทันที */}
+                    {machine.type === "dryer" ? <Flame size={15} /> : <WashingMachine size={15} />} {machine.id}
                   </span>
                   <button
                     onClick={() => onCancel(machine)}
