@@ -3,7 +3,9 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trophy, WalletCards, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import {
+  profileSchema,
   topUpSchema,
+  type ProfileValues,
   type TopUpValues,
 } from "../lib/schemas";
 import type { BookingHistory, CurrentUser } from "../lib/types";
@@ -13,16 +15,23 @@ export default function ProfileModal({
   onClose,
   onTopUp,
   onClearHistory,
+  onUpdateName,
 }: {
   user: CurrentUser;
   history: BookingHistory[];
   onClose: () => void;
   onTopUp: (amount: number) => void;
   onClearHistory: () => void;
+  onUpdateName: (name: string) => void;
 }) {
   // ทั้งฟอร์มชื่อและเติมเงินตรวจด้วย RHF + Zod ก่อนแก้ state ผู้ใช้
   const topUpForm = useForm<TopUpValues>({
     resolver: zodResolver(topUpSchema),
+  });
+  // RHF + Zod ตรวจชื่อก่อนอัปเดต state ของบัญชีผู้ใช้
+  const nameForm = useForm<ProfileValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: { displayName: user.displayName },
   });
   return (
     <div
@@ -44,6 +53,11 @@ export default function ProfileModal({
             <X />
           </button>
         </div>
+        <form onSubmit={nameForm.handleSubmit((value) => onUpdateName(value.displayName))} className="mt-6">
+          <label className="text-sm font-bold dark:text-white">ชื่อที่แสดง</label>
+          <div className="mt-2 flex gap-2"><input className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white" {...nameForm.register("displayName")} /><button className="rounded-xl bg-indigo-600 px-4 text-sm font-bold text-white">บันทึก</button></div>
+          {nameForm.formState.errors.displayName && <p className="mt-1 text-xs text-rose-500">{nameForm.formState.errors.displayName.message}</p>}
+        </form>
         <div className="mt-6 grid gap-3 sm:grid-cols-2">
           <div className="rounded-2xl bg-indigo-50 p-4 dark:bg-indigo-950">
             <WalletCards size={16} className="text-indigo-500" />

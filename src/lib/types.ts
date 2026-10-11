@@ -5,6 +5,7 @@ export type Machine = {
   status: MachineStatus;
   remaining: number;
   queue: number;
+  queueDurations?: number[];
   activeByMe?: boolean;
   paidAmount?: number;
   pointsUsed?: number;

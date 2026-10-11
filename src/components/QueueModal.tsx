@@ -1,7 +1,7 @@
 "use client";
 import { Clock3, Users, X } from "lucide-react";
 import type { Machine } from "../lib/types";
-import { formatRemainingTime } from "../lib/time";
+import { formatRemainingTime, totalWaitTime } from "../lib/time";
 
 export default function QueueModal({
   machine,
@@ -10,8 +10,7 @@ export default function QueueModal({
   machine: Machine;
   onClose: () => void;
 }) {
-  const estimatedWait =
-    machine.status === "in-use" ? machine.remaining * (machine.queue + 1) : 0;
+  const estimatedWait = totalWaitTime(machine);
   // Queue Modal คำนวณเวลารอจากเวลาที่เหลือของรอบปัจจุบันและจำนวนคิวที่มีอยู่
   return (
     <div
