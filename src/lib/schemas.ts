@@ -3,7 +3,8 @@ import { z } from "zod";
 // ฟอร์มจองตรวจข้อมูลทั้งหมดก่อนอัปเดต state ของเครื่องและยอดเงิน
 export const bookingSchema = z.object({
   service: z.enum(["washer", "dryer"]), machineId: z.string().min(1, "กรุณาเลือกเครื่อง"),
-  extraMinutes: z.number().int().min(0).max(30), detergent: z.boolean(), softener: z.boolean(),
+  // เครื่องอบ 45 นาที เพิ่มได้ครั้งละ 5 นาที และรวมเวลาได้ไม่เกิน 1 ชั่วโมง (+15 นาที)
+  extraMinutes: z.number().int().min(0).max(15), detergent: z.boolean(), softener: z.boolean(),
   pointsToUse: z.number().int().min(0, "แต้มต้องไม่ติดลบ"), usePoints: z.boolean(),
 });
 // เติมได้ตั้งแต่ 10 บาท เพื่อให้ยอดที่บันทึกผ่านกติกาเดียวกันทั้ง UI และ business logic

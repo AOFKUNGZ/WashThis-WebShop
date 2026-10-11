@@ -131,7 +131,7 @@ export default function BookingModal({
               <input
                 type="range"
                 min="0"
-                max="30"
+                max="15"
                 step="5"
                 className="mt-3 w-full accent-indigo-600"
                 {...form.register("extraMinutes", { valueAsNumber: true })}
