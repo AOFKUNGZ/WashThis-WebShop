@@ -217,8 +217,6 @@ export default function Home() {
     setReporting(null);
     setToast(`ส่งแจ้งซ่อม ${id} แล้ว`);
   };
-  // เปลี่ยนเฉพาะเครื่องที่ซ่อมเสร็จกลับเป็น available เพื่อให้ปุ่มซักผ้ากลับมาใช้งานได้ทันที
-  const repairMachine = (id: string) => setMachines((all) => all.map((machine) => machine.id === id ? { ...machine, status: "available", remaining: 0, queue: 0, queueDurations: [], queueEntries: [], activeByMe: false } : machine));
 
   // ==========================================
   // 4. PAGE COMPOSITION (โครงสร้างหน้าจอ)
@@ -245,7 +243,8 @@ export default function Home() {
           unreadCount={notifications.filter((n) => !n.read).length}
           onMenu={() => setMenuOpen(true)}
           onProfile={() => setProfileOpen(true)}
-          onNotifications={() => setNotificationOpen(true)}
+          // เปิดศูนย์แจ้งเตือนแล้ว mark เป็นอ่านทันที จึงรีเซ็ต badge โดยไม่ต้องกดรายการทีละอัน
+          onNotifications={() => { setNotifications((all) => all.map((notification) => ({ ...notification, read: true }))); setNotificationOpen(true); }}
         />
         {/* ซ่อนพื้นที่ Dashboard ทั้งหมดจน session ของผู้ใช้พร้อมใช้งาน */}
         {user && <main className="p-4 sm:p-7">
@@ -274,7 +273,6 @@ export default function Home() {
                   onReport={() => setReporting(m.id)}
                   onCancel={() => setCancelling(m)}
                   onQueue={() => setQueueMachine(m)}
-                  onRepair={() => repairMachine(m.id)}
                   isAuthenticated={Boolean(user)}
                   queueInfo={myQueueInfo(m, user?.id)}
                 />

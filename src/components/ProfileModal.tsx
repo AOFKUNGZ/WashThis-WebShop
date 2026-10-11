@@ -97,7 +97,7 @@ export default function ProfileModal({
               <input
                 type="number"
                 className="min-w-0 flex-1 rounded-xl border border-slate-200 px-3 py-2.5 text-slate-900 dark:border-slate-700 dark:bg-slate-800 dark:text-white"
-                placeholder="ขั้นต่ำ ฿20"
+                placeholder="ขั้นต่ำ ฿10"
                 {...topUpForm.register("amount", { valueAsNumber: true })}
               />
               <button className="rounded-xl bg-indigo-600 px-3 text-white">

@@ -30,7 +30,8 @@ export default function BookingModal({
       usePoints: false,
     },
   });
-  const service = form.watch("service"),
+  // ชนิดบริการยึดจากชนิดเครื่องเสมอ จึงไม่สามารถใช้เครื่องซักเพื่ออบหรือกลับกันได้
+  const service = machine.type,
     extra = form.watch("extraMinutes"),
     detergent = form.watch("detergent"),
     softener = form.watch("softener"),
@@ -71,11 +72,11 @@ export default function BookingModal({
               form.setError("pointsToUse", {
                 message: "แต้มที่ใช้เกินยอดที่มี",
               });
-            else if (total <= balance) onBook(values, total, usedPoints);
+            else if (total <= balance) onBook({ ...values, service: machine.type }, total, usedPoints);
           })}
           className="mt-6 space-y-4"
         >
-          <div className="grid grid-cols-2 gap-3">
+          {false && <div className="grid grid-cols-2 gap-3">
             <label
               className={`rounded-xl border p-3 ${service === "washer" ? "border-indigo-500 bg-indigo-50 dark:bg-indigo-950" : "border-slate-200 dark:border-slate-700"}`}
             >
@@ -83,6 +84,7 @@ export default function BookingModal({
                 className="sr-only"
                 type="radio"
                 value="washer"
+                disabled={machine.type !== "washer"}
                 {...form.register("service")}
               />
               <b className="text-sm dark:text-white">ซักผ้า</b>
@@ -95,11 +97,17 @@ export default function BookingModal({
                 className="sr-only"
                 type="radio"
                 value="dryer"
+                disabled={machine.type !== "dryer"}
                 {...form.register("service")}
               />
               <b className="text-sm dark:text-white">อบแห้ง</b>
               <small className="mt-1 block text-slate-500">45 นาที · ฿45</small>
             </label>
+          </div>}
+          {/* แสดงรายละเอียดเฉพาะบริการของเครื่องที่เลือก เพื่อไม่ให้ผู้ใช้สลับไปใช้บริการผิดประเภท */}
+          <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-3 dark:border-indigo-800 dark:bg-indigo-950">
+            <b className="text-sm dark:text-white">{service === "washer" ? "ซักผ้า" : "อบแห้ง"}</b>
+            <small className="mt-1 block text-slate-500">{service === "washer" ? "60 นาที · ฿30" : "45 นาที · ฿45"}</small>
           </div>
           {service === "washer" && (
             <div className="space-y-2 rounded-xl bg-slate-50 p-3 dark:bg-slate-800">

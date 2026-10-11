@@ -288,7 +288,6 @@ type CardProps = {
   onReport: () => void;
   onCancel: () => void;
   onQueue: () => void;
-  onRepair: () => void;
   isAuthenticated: boolean;
   queueInfo: { position: number; wait: number } | null;
 };
@@ -298,7 +297,6 @@ export function MachineCard({
   onReport,
   onCancel,
   onQueue,
-  onRepair,
   isAuthenticated,
   queueInfo,
 }: CardProps) {
@@ -371,7 +369,7 @@ export function MachineCard({
       <div className="mt-4">
         {available ? <button onClick={onBook} className="w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700">ซักผ้า</button>
           : active ? <button disabled={Boolean(queueInfo)} onClick={onBook} className="w-full rounded-lg bg-amber-500 py-2.5 text-sm font-bold text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50">{queueInfo ? "คุณอยู่ในคิว" : "ต่อคิว"}</button>
-          : <button onClick={onRepair} className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700">เครื่องพร้อมใช้งาน</button>}
+          : null}
       </div>
     </article>
   );
