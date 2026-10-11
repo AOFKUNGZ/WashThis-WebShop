@@ -9,10 +9,8 @@ import {
   ListOrdered,
   LogIn,
   Menu,
-  Moon,
   RotateCcw,
   SquareX,
-  Sun,
   Trophy,
   UserRound,
   WalletCards,
@@ -32,8 +30,6 @@ type HeaderProps = {
   onMenu: () => void;
   onProfile: () => void;
   onNotifications: () => void;
-  dark: boolean;
-  onThemeToggle: () => void;
 };
 export function Header({
   user,
@@ -41,8 +37,6 @@ export function Header({
   onMenu,
   onProfile,
   onNotifications,
-  dark,
-  onThemeToggle,
 }: HeaderProps) {
   // แสดงข้อมูลจาก state กลาง จึงเปลี่ยนยอดเงิน แต้ม และชื่อทันทีโดยไม่เก็บ state ซ้ำ
   return (
@@ -74,13 +68,13 @@ export function Header({
         </div>
       </div>
       <div className="ml-auto flex items-center gap-2">
-        <button
-          onClick={onThemeToggle}
+        {false && <button
+          onClick={() => undefined}
           aria-label="สลับโหมดสี"
           className="rounded-xl bg-slate-100 p-2.5 text-slate-600 dark:bg-slate-800 dark:text-amber-300"
         >
-          {dark ? <Sun size={17} /> : <Moon size={17} />}
-        </button>
+          {null}
+        </button>}
         {user ? (
           <>
             <button

@@ -53,7 +53,6 @@ export default function Home() {
     [queueMachine, setQueueMachine] = useState<Machine | null>(null),
     [profileOpen, setProfileOpen] = useState(false),
     [menuOpen, setMenuOpen] = useState(false),
-    [dark, setDark] = useState(false),
     [toast, setToast] = useState(""),
     [notifications, setNotifications] = useState<AppNotification[]>([]),
     [notificationOpen, setNotificationOpen] = useState(false);
@@ -89,9 +88,6 @@ export default function Home() {
     }, 60_000);
     return () => window.clearInterval(timer);
   }, []);
-  useEffect(() => {
-    document.documentElement.classList.toggle("dark", dark);
-  }, [dark]);
   useEffect(() => {
     if (!toast) return;
     const id = setTimeout(() => setToast(""), 4000);
@@ -234,10 +230,9 @@ export default function Home() {
           onMenu={() => setMenuOpen(true)}
           onProfile={() => setProfileOpen(true)}
           onNotifications={() => setNotificationOpen(true)}
-          dark={dark}
-          onThemeToggle={() => setDark((value) => !value)}
         />
-        <main className="p-4 sm:p-7">
+        {/* ซ่อนพื้นที่ Dashboard ทั้งหมดจน session ของผู้ใช้พร้อมใช้งาน */}
+        {user && <main className="p-4 sm:p-7">
           <section className="rounded-3xl bg-gradient-to-br from-indigo-600 via-violet-600 to-fuchsia-600 p-6 text-white shadow-lg shadow-indigo-500/20 sm:p-8">
             <p className="text-sm text-indigo-100">WashThis! · Smart Laundry</p>
             <h1 className="mt-2 text-2xl font-extrabold sm:text-3xl">
@@ -268,7 +263,7 @@ export default function Home() {
               ))}
             </div>
           </section>
-        </main>
+        </main>}
       </div>
       {booking && user && (
         <BookingModal
@@ -314,7 +309,7 @@ export default function Home() {
           }
         />
       )}{" "}
-      {toast && (
+      {user && toast && (
         <div
           role="status"
           className="fixed bottom-5 left-5 z-[60] rounded-2xl bg-slate-900 px-5 py-4 text-sm font-bold text-white shadow-2xl"
@@ -322,7 +317,7 @@ export default function Home() {
           ✓ {toast}
         </div>
       )}
-      <ChatWidget />
+      {user && <ChatWidget />}
     </div>
   );
 }
