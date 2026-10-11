@@ -18,7 +18,7 @@ import {
 } from "lucide-react";
 import { signIn, signOut } from "next-auth/react";
 import type { ReactNode } from "react";
-import { formatRemainingTime, totalWaitTime } from "../lib/time";
+import { formatRemainingTime, myQueueInfo, totalWaitTime } from "../lib/time";
 import type { CurrentUser, Machine } from "../lib/types";
 
 // ==========================================
@@ -171,7 +171,7 @@ type SidebarProps = {
   mobileOpen: boolean;
   close: () => void;
   onProfile: () => void;
-  onResetAll: () => void;
+  userId: string;
   onCancel: (machine: Machine) => void;
 };
 export function Sidebar({
@@ -179,7 +179,7 @@ export function Sidebar({
   mobileOpen,
   close,
   onProfile,
-  onResetAll,
+  userId,
   onCancel,
 }: SidebarProps) {
   // เครื่องที่ใช้งานอยู่ส่งมาจาก page เพื่อให้ sidebar และ card แสดงข้อมูลชุดเดียวกัน
@@ -245,6 +245,7 @@ export function Sidebar({
                   เหลือ {formatRemainingTime(machine.remaining)} ·
                   คืนเงินเต็มจำนวน
                 </p>
+                {myQueueInfo(machine, userId) && <p className="mt-1 text-[11px] font-bold text-indigo-700 dark:text-indigo-300">คุณอยู่ในคิว ลำดับที่ {myQueueInfo(machine, userId)?.position} · รอ {formatRemainingTime(myQueueInfo(machine, userId)?.wait ?? 0)}</p>}
               </div>
             ))
           ) : (
@@ -253,9 +254,9 @@ export function Sidebar({
             </div>
           )}
         </div>
-        {!!activeMachines.length && (
+        {false && (
           <button
-            onClick={onResetAll}
+            onClick={() => undefined}
             className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-rose-200 bg-rose-50 py-2.5 text-xs font-bold text-rose-700 dark:border-rose-900 dark:bg-rose-950 dark:text-rose-300"
           >
             <RotateCcw size={14} /> รีเซ็ตเครื่องทั้งหมดของฉัน
@@ -287,7 +288,9 @@ type CardProps = {
   onReport: () => void;
   onCancel: () => void;
   onQueue: () => void;
+  onRepair: () => void;
   isAuthenticated: boolean;
+  queueInfo: { position: number; wait: number } | null;
 };
 export function MachineCard({
   machine: m,
@@ -295,7 +298,9 @@ export function MachineCard({
   onReport,
   onCancel,
   onQueue,
+  onRepair,
   isAuthenticated,
+  queueInfo,
 }: CardProps) {
   // totalWaitTime รวมเวลาของเครื่องปัจจุบันและทุกคนที่จองล่วงหน้าอย่างแม่นยำ
   const active = m.status === "in-use",
@@ -311,11 +316,7 @@ export function MachineCard({
       >
         <AlertTriangle size={15} />
       </button>
-      <button
-        disabled={m.status === "broken"}
-        onClick={onBook}
-        className="w-full text-left disabled:cursor-not-allowed"
-      >
+      <div className="w-full text-left">
         <div className="flex items-start justify-between pr-9">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/80 text-slate-700 dark:bg-slate-800 dark:text-slate-100">
             {m.type === "washer" ? (
@@ -348,8 +349,9 @@ export function MachineCard({
             คิว {m.queue} คน · รอรวม {formatRemainingTime(totalWaitTime(m))}
           </div>
         )}
-      </button>
-      <div className="mt-4 grid grid-cols-2 gap-2">
+      </div>
+      {queueInfo && <p className="mt-3 rounded-xl bg-indigo-600 px-3 py-2 text-center text-xs font-bold text-white">คุณอยู่ในคิว ลำดับที่ {queueInfo.position} · รอ {formatRemainingTime(queueInfo.wait)}</p>}
+      {false && <div className="mt-4 grid grid-cols-2 gap-2">
         <button
           onClick={onQueue}
           className="flex items-center justify-center gap-1 rounded-lg bg-white/90 py-2 text-[11px] font-bold text-slate-700 hover:bg-white dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700"
@@ -363,9 +365,13 @@ export function MachineCard({
           >
             <SquareX size={13} /> ยกเลิก
           </button>
-        ) : (
-          <span />
-        )}
+        ) : <button disabled={m.status === "broken" || Boolean(queueInfo)} onClick={onBook} className="rounded-lg bg-emerald-600 py-2 text-[11px] font-bold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">{queueInfo ? "คุณอยู่ในคิว" : "ซักผ้า / จองคิว"}</button>}
+      </div>}
+      {/* แสดง action เพียงหนึ่งปุ่มตามสถานะ เพื่อป้องกันการกดคำสั่งที่ใช้ไม่ได้ */}
+      <div className="mt-4">
+        {available ? <button onClick={onBook} className="w-full rounded-lg bg-emerald-600 py-2.5 text-sm font-bold text-white hover:bg-emerald-700">ซักผ้า</button>
+          : active ? <button disabled={Boolean(queueInfo)} onClick={onBook} className="w-full rounded-lg bg-amber-500 py-2.5 text-sm font-bold text-white hover:bg-amber-600 disabled:cursor-not-allowed disabled:opacity-50">{queueInfo ? "คุณอยู่ในคิว" : "ต่อคิว"}</button>
+          : <button onClick={onRepair} className="w-full rounded-lg bg-blue-600 py-2.5 text-sm font-bold text-white hover:bg-blue-700">เครื่องพร้อมใช้งาน</button>}
       </div>
     </article>
   );

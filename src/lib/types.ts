@@ -1,4 +1,5 @@
 export type MachineStatus = "available" | "in-use" | "broken";
+export type QueueEntry = { userId: string; duration: number; paidAmount: number; pointsUsed: number };
 export type Machine = {
   id: string;
   type: "washer" | "dryer";
@@ -6,6 +7,7 @@ export type Machine = {
   remaining: number;
   queue: number;
   queueDurations?: number[];
+  queueEntries?: QueueEntry[];
   activeByMe?: boolean;
   paidAmount?: number;
   pointsUsed?: number;

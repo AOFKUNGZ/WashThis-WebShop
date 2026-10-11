@@ -7,12 +7,12 @@ import BookingModal from "../components/BookingModal";
 import ConfirmDialog from "../components/ConfirmDialog";
 import ProfileModal from "../components/ProfileModal";
 import QueueModal from "../components/QueueModal";
-import ChatWidget from "../components/ChatWidget";
 import NotificationDropdown, {
   type AppNotification,
 } from "../components/NotificationDropdown";
 import type { BookingHistory, CurrentUser, Machine } from "../lib/types";
 import type { BookingValues } from "../lib/schemas";
+import { myQueueInfo } from "../lib/time";
 
 // ==========================================
 // 1. INITIAL DATA (ข้อมูลตั้งต้น)
@@ -70,10 +70,8 @@ export default function Home() {
         : null,
     );
   }, [session]);
-  const active = useMemo(
-    () => machines.filter((m) => m.activeByMe && m.status === "in-use"),
-    [machines],
-  );
+  // เครื่องของฉันรวมทั้งรอบที่กำลังซักและคิวที่มี userId ของฉันอยู่ เพื่อห้ามจองซ้ำ
+  const active = useMemo(() => user ? machines.filter((m) => m.activeByMe || m.queueEntries?.some((entry) => entry.userId === user.id)) : [], [machines, user]);
   useEffect(() => {
     // setInterval ลดเวลาทีละ 1 นาที และเริ่มคิวถัดไปอัตโนมัติเมื่อรอบปัจจุบันจบ
     const timer = window.setInterval(() => {
@@ -81,13 +79,15 @@ export default function Home() {
         if (machine.status !== "in-use") return machine;
         if (machine.remaining > 1) return { ...machine, remaining: machine.remaining - 1 };
         const [nextDuration, ...remainingQueue] = machine.queueDurations ?? [];
+        const entries = machine.queueEntries ?? [], genericCount = machine.queue - entries.length;
+        const nextEntry = genericCount === 0 ? entries[0] : undefined;
         return nextDuration
-          ? { ...machine, remaining: nextDuration, queue: remainingQueue.length, queueDurations: remainingQueue, activeByMe: false }
-          : { ...machine, status: "available", remaining: 0, queue: 0, queueDurations: [], activeByMe: false };
+          ? { ...machine, remaining: nextDuration, queue: remainingQueue.length, queueDurations: remainingQueue, queueEntries: genericCount === 0 ? entries.slice(1) : entries, activeByMe: nextEntry?.userId === user?.id }
+          : { ...machine, status: "available", remaining: 0, queue: 0, queueDurations: [], queueEntries: [], activeByMe: false };
       }));
     }, 60_000);
     return () => window.clearInterval(timer);
-  }, []);
+  }, [user?.id]);
   useEffect(() => {
     if (!toast) return;
     const id = setTimeout(() => setToast(""), 4000);
@@ -100,6 +100,19 @@ export default function Home() {
   // คืนเงินและแต้มเต็มจำนวนก่อนรีเซ็ตเครื่องให้กลับเป็นสถานะว่าง
   const cancel = (machine: Machine) => {
     if (!user) return;
+    const queueIndex = machine.queueEntries?.findIndex((entry) => entry.userId === user.id) ?? -1;
+    if (queueIndex >= 0) {
+      const entry = machine.queueEntries![queueIndex];
+      // ยกเลิกเฉพาะคิวของผู้ใช้คนนี้ พร้อมคืนยอดที่เก็บไว้ใน QueueEntry โดยไม่กระทบคิวคนอื่น
+      setUser((current) => current && { ...current, balance: current.balance + entry.paidAmount, points: current.points + entry.pointsUsed });
+      setMachines((all) => all.map((m) => {
+        if (m.id !== machine.id) return m;
+        const genericCount = m.queue - (m.queueEntries?.length ?? 0);
+        return { ...m, queue: m.queue - 1, queueDurations: m.queueDurations?.filter((_, index) => index !== genericCount + queueIndex), queueEntries: m.queueEntries?.filter((_, index) => index !== queueIndex) };
+      }));
+      setToast(`ยกเลิกคิว ${machine.id} และคืนเงินแล้ว`);
+      return;
+    }
     const money = machine.paidAmount ?? 0,
       points = machine.pointsUsed ?? 0;
     setUser(
@@ -150,7 +163,8 @@ export default function Home() {
         m.id === v.machineId
           ? m.status === "in-use"
             // คิวเก็บ duration ของแต่ละคน เพื่อให้ totalWaitTime รวมเวลารอได้ถูกต้อง
-            ? { ...m, queue: m.queue + 1, queueDurations: [...(m.queueDurations ?? []), duration] }
+            // บันทึก userId พร้อมคิว เพื่อให้การ์ดและ Sidebar รู้ว่าเป็นคิวของผู้ใช้คนนี้
+            ? { ...m, queue: m.queue + 1, queueDurations: [...(m.queueDurations ?? []), duration], queueEntries: [...(m.queueEntries ?? []), { userId: user.id, duration, paidAmount: total, pointsUsed: usedPoints }] }
             : {
               ...m,
               status: "in-use",
@@ -203,6 +217,8 @@ export default function Home() {
     setReporting(null);
     setToast(`ส่งแจ้งซ่อม ${id} แล้ว`);
   };
+  // เปลี่ยนเฉพาะเครื่องที่ซ่อมเสร็จกลับเป็น available เพื่อให้ปุ่มซักผ้ากลับมาใช้งานได้ทันที
+  const repairMachine = (id: string) => setMachines((all) => all.map((machine) => machine.id === id ? { ...machine, status: "available", remaining: 0, queue: 0, queueDurations: [], queueEntries: [], activeByMe: false } : machine));
 
   // ==========================================
   // 4. PAGE COMPOSITION (โครงสร้างหน้าจอ)
@@ -214,8 +230,8 @@ export default function Home() {
         mobileOpen={menuOpen}
         close={() => setMenuOpen(false)}
         onProfile={() => setProfileOpen(true)}
-        onResetAll={() => active.forEach(cancel)}
         onCancel={setCancelling}
+        userId={user.id}
       />}
       {user && menuOpen && (
         <button
@@ -258,7 +274,9 @@ export default function Home() {
                   onReport={() => setReporting(m.id)}
                   onCancel={() => setCancelling(m)}
                   onQueue={() => setQueueMachine(m)}
+                  onRepair={() => repairMachine(m.id)}
                   isAuthenticated={Boolean(user)}
+                  queueInfo={myQueueInfo(m, user?.id)}
                 />
               ))}
             </div>
@@ -293,9 +311,13 @@ export default function Home() {
           user={user}
           history={history}
           onClose={() => setProfileOpen(false)}
-          onTopUp={(amount) =>
-            setUser((u) => u && { ...u, balance: u.balance + amount })
-          }
+          onTopUp={(amount) => {
+            // เติมเงินสำเร็จต้องเพิ่มทั้ง wallet และ notification จาก action เดียวกัน
+            // ทุก 10 บาทได้ 1 แต้ม โดย floor ตัดเศษที่ไม่ครบสิบบาทออกตามกติกา
+            const earnedPoints = Math.floor(amount / 10);
+            setUser((u) => u && { ...u, balance: u.balance + amount, points: u.points + earnedPoints });
+            setNotifications((all) => [{ id: String(Date.now()), title: `เติมเงินสำเร็จ +${amount} บาท`, detail: `Wallet เพิ่ม ฿${amount} และได้รับ ${earnedPoints} แต้ม`, createdAt: "เมื่อสักครู่", read: false }, ...all]);
+          }}
           onClearHistory={() => setHistory([])}
           onUpdateName={(displayName) => setUser((current) => current && { ...current, displayName })}
         />
@@ -317,7 +339,6 @@ export default function Home() {
           ✓ {toast}
         </div>
       )}
-      {user && <ChatWidget />}
     </div>
   );
 }
