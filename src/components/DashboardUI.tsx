@@ -308,13 +308,15 @@ export function MachineCard({
     <article
       className={`relative rounded-2xl border p-4 transition hover:-translate-y-0.5 hover:shadow-md ${statusStyle[m.status]} ${isAuthenticated ? "" : "[&>button]:hidden [&>div:last-child]:hidden"}`}
     >
-      <button
-        onClick={onReport}
-        aria-label={`แจ้งเครื่อง ${m.id} เสีย`}
-        className="absolute right-3 top-3 rounded-lg bg-white/90 p-2 text-rose-600 shadow-sm hover:bg-white dark:bg-slate-800 dark:text-rose-300"
-      >
-        <AlertTriangle size={15} />
-      </button>
+      {m.status !== "broken" && (
+        <button
+          onClick={onReport}
+          aria-label={`แจ้งเครื่อง ${m.id} เสีย`}
+          className="absolute right-3 top-3 rounded-lg bg-white/90 p-2 text-rose-600 shadow-sm hover:bg-white dark:bg-slate-800 dark:text-rose-300"
+        >
+          <AlertTriangle size={15} />
+        </button>
+      )}
       <div className="w-full text-left">
         <div className="flex items-start justify-between pr-9">
           <span className="grid h-10 w-10 place-items-center rounded-xl bg-white/80 text-slate-700 dark:bg-slate-800 dark:text-slate-100">
